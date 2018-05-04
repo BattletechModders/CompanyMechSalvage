@@ -5,6 +5,8 @@ using System.Text;
 using Harmony;
 using BattleTech;
 using System.Reflection;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace CompanyMechSalvage
 {
@@ -13,56 +15,68 @@ namespace CompanyMechSalvage
     {
         static void Postfix(Contract __instance, List<UnitResult> enemyMechs, List<VehicleDef> enemyVehicles, List<UnitResult> lostUnits, bool logResults = false)
         {
+            Logger.LogLine("Postfix Start");
+            Settings settings = CompanyMechSalvage.LoadSettings();
+            Logger.LogLine("Settings Loaded");
             SimGameState simulation = __instance.BattleTechGame.Simulation;
             SimGameConstants constants = simulation.Constants;
-            for (int i = 0; i < lostUnits.Count; i++)
-            {
-                MechDef mech = lostUnits[i].mech;
-                if (mech.IsLocationDestroyed(ChassisLocations.CenterTorso))
+            float roll = simulation.NetworkRandom.Float(0f, 1f);
+            Logger.LogLine("Rolled: " + roll);
+            bool recovered = roll <= settings.RecoveryChance;
+            if (!recovered) {
+                Logger.LogLine("Mech not recovered");
+                for (int i = 0; i < lostUnits.Count; i++)
                 {
-                    lostUnits[i].mechLost = true;
-                    SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech); 
-                    __instance.SalvageResults.Add(def);
+                    MechDef mech = lostUnits[i].mech;
+                    if (mech.IsLocationDestroyed(ChassisLocations.CenterTorso))
+                    {
+                        Logger.LogLine("CT destroyed");
+                        lostUnits[i].mechLost = true;
+                        SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech);
+                        __instance.SalvageResults.Add(def);
 
-                    foreach (MechComponentRef mechComponentRef in mech.Inventory)
-                    {
-                        if (!mech.IsLocationDestroyed(mechComponentRef.MountedLocation) && mechComponentRef.DamageLevel != ComponentDamageLevel.Destroyed)
+                        foreach (MechComponentRef mechComponentRef in mech.Inventory)
                         {
-                            __instance.SalvageResults.Add(new SalvageDef
+                            if (!mech.IsLocationDestroyed(mechComponentRef.MountedLocation) && mechComponentRef.DamageLevel != ComponentDamageLevel.Destroyed)
                             {
-                                MechComponentDef = mechComponentRef.Def,
-                                Description = new DescriptionDef(mechComponentRef.Def.Description),
-                                RewardID = __instance.GenerateRewardUID(),
-                                Type = SalvageDef.SalvageType.COMPONENT,
-                                ComponentType = mechComponentRef.Def.ComponentType,
-                                Damaged = false,
-                                Count = 1
-                            });
+                                __instance.SalvageResults.Add(new SalvageDef
+                                {
+                                    MechComponentDef = mechComponentRef.Def,
+                                    Description = new DescriptionDef(mechComponentRef.Def.Description),
+                                    RewardID = __instance.GenerateRewardUID(),
+                                    Type = SalvageDef.SalvageType.COMPONENT,
+                                    ComponentType = mechComponentRef.Def.ComponentType,
+                                    Damaged = false,
+                                    Count = 1
+                                });
+                            }
                         }
                     }
-                }
-                else if ((mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)) || mech.IsLocationDestroyed(ChassisLocations.Head))
-                {
-                    lostUnits[i].mechLost = true;
-                    SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech);
-                    __instance.SalvageResults.Add(def);
-                    __instance.SalvageResults.Add(def);
-                    foreach (MechComponentRef mechComponentRef in mech.Inventory)
+                    else if ((mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)) || mech.IsLocationDestroyed(ChassisLocations.Head))
                     {
-                        if (!mech.IsLocationDestroyed(mechComponentRef.MountedLocation) && mechComponentRef.DamageLevel != ComponentDamageLevel.Destroyed)
+                        Logger.LogLine("Legs or Head destroyed");
+                        lostUnits[i].mechLost = true;
+                        SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech);
+                        __instance.SalvageResults.Add(def);
+                        __instance.SalvageResults.Add(def);
+                        foreach (MechComponentRef mechComponentRef in mech.Inventory)
                         {
-                            __instance.SalvageResults.Add(new SalvageDef
+                            if (!mech.IsLocationDestroyed(mechComponentRef.MountedLocation) && mechComponentRef.DamageLevel != ComponentDamageLevel.Destroyed)
                             {
-                                MechComponentDef = mechComponentRef.Def,
-                                Description = new DescriptionDef(mechComponentRef.Def.Description),
-                                RewardID = __instance.GenerateRewardUID(),
-                                Type = SalvageDef.SalvageType.COMPONENT,
-                                ComponentType = mechComponentRef.Def.ComponentType,
-                                Damaged = false,
-                                Count = 1
-                            });
+                                __instance.SalvageResults.Add(new SalvageDef
+                                {
+                                    MechComponentDef = mechComponentRef.Def,
+                                    Description = new DescriptionDef(mechComponentRef.Def.Description),
+                                    RewardID = __instance.GenerateRewardUID(),
+                                    Type = SalvageDef.SalvageType.COMPONENT,
+                                    ComponentType = mechComponentRef.Def.ComponentType,
+                                    Damaged = false,
+                                    Count = 1
+                                });
+                            }
                         }
                     }
+                    Logger.LogLine("Salvage created");
                 }
             }
         } 
@@ -91,6 +105,52 @@ namespace CompanyMechSalvage
         {
             var harmony = HarmonyInstance.Create("de.morphyum.CompanyMechSalvage");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+        }
+
+        public static Settings LoadSettings()
+        {
+            try
+            {
+                using (StreamReader r = new StreamReader("mods/CompanyMechSalvage/settings.json"))
+                {
+                    string json = r.ReadToEnd();
+                    return JsonConvert.DeserializeObject<Settings>(json);
+                }
+            } catch (Exception ex)
+            {
+                Logger.LogError(ex);
+                return null;
+            }
+        }
+    }
+
+    public class Settings
+    {
+        public float RecoveryChance;
+    }
+
+    public class Logger
+    {
+        public static void LogError(Exception ex)
+        {
+            string filePath = "mods/CompanyMechSalvage/Log.txt";
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine("Message :" + ex.Message + "<br/>" + Environment.NewLine + "StackTrace :" + ex.StackTrace +
+                   "" + Environment.NewLine + "Date :" + DateTime.Now.ToString());
+                writer.WriteLine(Environment.NewLine + "-----------------------------------------------------------------------------" + Environment.NewLine);
+            }
+        }
+
+        public static void LogLine(String line)
+        {
+            string filePath = "mods/CompanyMechSalvage/Log.txt";
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine(line + Environment.NewLine + "Date :" + DateTime.Now.ToString());
+                writer.WriteLine(Environment.NewLine + "-----------------------------------------------------------------------------" + Environment.NewLine);
+            }
         }
     }
 }
