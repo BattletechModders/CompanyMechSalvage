@@ -18,17 +18,15 @@ namespace CompanyMechSalvage
             for (int i = 0; i < lostUnits.Count; i++)
             {
                 MechDef mech = lostUnits[i].mech;
-                if (mech.IsLocationDestroyed(ChassisLocations.Head) || (mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)))
-                {
-                    lostUnits[i].mechLost = true;
-                }
                 if (mech.IsLocationDestroyed(ChassisLocations.CenterTorso))
                 {
+                    lostUnits[i].mechLost = true;
                     SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech); 
                     __instance.SalvageResults.Add(def);
                 }
                 else if ((mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)) || mech.IsLocationDestroyed(ChassisLocations.Head))
                 {
+                    lostUnits[i].mechLost = true;
                     SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech);
                     __instance.SalvageResults.Add(def);
                     __instance.SalvageResults.Add(def);
