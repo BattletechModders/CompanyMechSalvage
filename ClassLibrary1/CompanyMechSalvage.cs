@@ -23,6 +23,23 @@ namespace CompanyMechSalvage
                     lostUnits[i].mechLost = true;
                     SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech); 
                     __instance.SalvageResults.Add(def);
+
+                    foreach (MechComponentRef mechComponentRef in mech.Inventory)
+                    {
+                        if (!mech.IsLocationDestroyed(mechComponentRef.MountedLocation) && mechComponentRef.DamageLevel != ComponentDamageLevel.Destroyed)
+                        {
+                            __instance.SalvageResults.Add(new SalvageDef
+                            {
+                                MechComponentDef = mechComponentRef.Def,
+                                Description = new DescriptionDef(mechComponentRef.Def.Description),
+                                RewardID = __instance.GenerateRewardUID(),
+                                Type = SalvageDef.SalvageType.COMPONENT,
+                                ComponentType = mechComponentRef.Def.ComponentType,
+                                Damaged = false,
+                                Count = 1
+                            });
+                        }
+                    }
                 }
                 else if ((mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)) || mech.IsLocationDestroyed(ChassisLocations.Head))
                 {
@@ -30,6 +47,22 @@ namespace CompanyMechSalvage
                     SalvageDef def = CompanyMechSalvage.CreateMechPart(__instance, constants, mech);
                     __instance.SalvageResults.Add(def);
                     __instance.SalvageResults.Add(def);
+                    foreach (MechComponentRef mechComponentRef in mech.Inventory)
+                    {
+                        if (!mech.IsLocationDestroyed(mechComponentRef.MountedLocation) && mechComponentRef.DamageLevel != ComponentDamageLevel.Destroyed)
+                        {
+                            __instance.SalvageResults.Add(new SalvageDef
+                            {
+                                MechComponentDef = mechComponentRef.Def,
+                                Description = new DescriptionDef(mechComponentRef.Def.Description),
+                                RewardID = __instance.GenerateRewardUID(),
+                                Type = SalvageDef.SalvageType.COMPONENT,
+                                ComponentType = mechComponentRef.Def.ComponentType,
+                                Damaged = false,
+                                Count = 1
+                            });
+                        }
+                    }
                 }
             }
         } 
