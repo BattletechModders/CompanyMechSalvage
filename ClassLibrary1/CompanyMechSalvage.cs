@@ -52,7 +52,7 @@ namespace CompanyMechSalvage
                             }
                         }
                     }
-                    else if ((mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)) || mech.IsLocationDestroyed(ChassisLocations.Head))
+                    else if ((mech.IsLocationDestroyed(ChassisLocations.LeftLeg) && mech.IsLocationDestroyed(ChassisLocations.RightLeg)) || (mech.IsLocationDestroyed(ChassisLocations.Head) && settings.DestroyedWithHead))
                     {
                         Logger.LogLine("Legs or Head destroyed");
                         lostUnits[i].mechLost = true;
@@ -128,6 +128,7 @@ namespace CompanyMechSalvage
     public class Settings
     {
         public float RecoveryChance;
+        public bool DestroyedWithHead;
     }
 
     public class Logger
