@@ -5,6 +5,7 @@ BattleTech mod (using BTML) that let's your own mechs getting destroyed permanen
 ** Warning: Uses the experimental BTML mod loader that might change, come here again to check for updates **
 
 * install [BattleTechModLoader](https://github.com/Mpstark/BattleTechModLoader/releases) using the [instructions here](https://github.com/Mpstark/BattleTechModLoader)
+* Make sure "DestroyedMechRecoveryChance" is set to 1 in BATTLETECH\BattleTech_Data\StreamingAssets\data\simGameConstants\SimGameConstants.json (Is the default value, so if you haven't changed it it will be 1)
 
 ## Features
 - Your own mechs can be permanently destroyed when they are damaged to badly.
