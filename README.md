@@ -20,6 +20,7 @@ One of your Mechs get's both it's legs destroyed in a mission. At the end of the
 You punch out because you are scared to lose your pilot, therefore your head gets destroyed. At the end of the mission you will be rewarded two part of that mechtype and your Mech will be removed for your bay.
 
 There are also currently 2 configuration settings available:
+
 Setting | Type | Default | Description
 --- | --- | --- | ---
 RecoveryChance | float | default 0 | set this to anything between 0 and 1 to set a chance that your mechs will be not destroyed even when they lose a vital part. 0 = 0%, 1 = 100%
