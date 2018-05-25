@@ -1,3 +1,6 @@
+# DISCONTINUED please check out [AdjustedMechSalvage](https://github.com/Morphyum/AdjustedMechSalvage)
+
+
 # CompanyMechSalvage
 BattleTech mod (using BTML) that let's your own mechs getting destroyed permanently and instead rewards you with partial mech parts.
 
